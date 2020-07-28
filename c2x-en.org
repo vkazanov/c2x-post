@@ -1,0 +1,351 @@
+* Annotation
+
+  #+begin_quote
+  I strain to make the far-off echo yield
+  A cue to the events that may come in my day.
+  (‘Hamlet’, Boris Pasternak)
+  #+end_quote
+
+  I’ll be honest: I don’t write in pure C that often anymore and I haven’t been following
+  the language’s development for a long time. However, two unexpected things happened
+  recently: С [[https://www.tiobe.com/tiobe-index/][won back]] the title of the most popular programming language according to
+  TIOBE, and the first truly [[https://nostarch.com/Effective_C][interesting]] book in years on this language was published. So,
+  I decided to spend a few evenings studying material on C2x, the future version of C.
+
+  Here I will share with you what I consider to be its most interesting new features.
+
+* The Committee, the Standard and all that
+
+  I am sure most of you know how C is developed, but, for anyone who doesn’t know let me
+  first explain the terminology, and will then briefly retell the story of the language.
+
+  In 1989 the already extremely popular programming language, C, reached new heights of
+  recognition, becoming both the American national ([[https://en.wikipedia.org/wiki/American_National_Standards_Institute][ANSI]]) and the international ([[https://en.wikipedia.org/wiki/International_Organization_for_Standardization][ISO]])
+  standard. This version of C was known as C89, or ANSI C to differentiate it from the
+  numerous semi-compatible dialects that had existed previously.
+
+  A new version of the language standard is released approximately once every ten years.
+  At the present time there are four versions in existence: the original C89, C99, C11 and
+  C18. It is not known when the next version will be published, so the version currently
+  being worked on is referred to as C2x.
+
+  Changes to the standard are made by a special group, the so-called WG14. It comprises
+  interested representatives of the industry from various countries.
+
+  In the specialist English-language literature this group is often referred to as the
+  ‘Committee’, so that is what I am going to call it here as well.
+
+  The Committee receives proposals from those involved, each proposal being given a
+  designation(e.g. [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2353.htm][N2353]]). Proposals usually include: the reason for introducing
+  changes, references to other documents, and specific changes to the Standard. Proposals
+  can come in several versions, each of which is given a unique designation.
+
+  Returning to our topic for a moment, I have split this article into three parts, and
+  have ordered them according to the likelihood of the relevant changes being made to the
+  standard. The three parts are as follows:
+
+  1. Proposals the Committee has already accepted.
+
+  2. Proposals received positively but returned to the authors for revision.
+
+  3. What I consider to be the ‘juiciest’ proposals: rumoured unpublished proposals, being
+     discussed behind the scenes by members of the Committee.
+
+* Proposals accepted by the Committee
+
+** strdup and strndup functions
+
+   I may appear ignorant when I say that I wasn’t aware these functions weren’t in the
+   standard C library. What could be more obvious and simpler than copying strings? But
+   no, C isn’t like that. C doesn’t like its users.
+
+   So, 20 years later, we are [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2353.htm][getting]] the =strdup= and =strndup= functions!
+
+   #+begin_src c
+   #include <string.h>
+
+   char *strdup (const char *s);
+   char *strndup (const char *s, size_t size);
+   #+end_src
+
+   It is nice to know that even the Committee accepts the inevitable.
+
+** Attributes
+
+   Developers of major C compilers have a favourite game they play: coming up with
+   extensions to the language most often expressed through attributes of declarations and
+   definitions. The language itself, of course, does not provide any special syntax for
+   such things, so each person needs to do what they can to be creative.
+
+   In order to – somehow – to sort out this mess without coming up with dozens of new
+   keywords, the Committee thought up a syntax-to-rule-them-all. In a nutshell, a standard
+   [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2335.pdf][syntax]] for specifying attributes will be approved as part of the next version. Here is
+   an example from the proposal:
+
+   #+begin_src c
+   [[attr1]] struct [[attr2]] S { } [[attr3]] s1 [[attr4]], s2 [[attr5]];
+   #+end_src
+
+   Here, =attr1= relates to =s1= and ==s2==; =attr2= relates to the =struct S= definition;
+   =attr3= relates to the =struct s1= type; =attr4= to the =s1= identifier; and =attr5= to
+   the =s2= identifier.
+
+   The Committee has already voted to include the attributes in the standard, but there is
+   still a long time to wait before the updated version of the standard is published.
+   Nevertheless, proposal authors are already playing with their new toy. Here are some of
+   the proposed attributes:
+
+   1. The =deprecated= attribute allows you to mark a declaration as obsolete, which allows
+      compilers to issue appropriate warnings.
+
+   2. The =fallthrough= attribute can be used to explicitly mark the places in the switch
+      case branches, where the control flow is supposed to cross case boundaries.
+
+   3. Using the =nodiscard= attribute you can explicitly specify that a value returned by
+      the function needs to be processed.
+
+   4. Where a variable or function is not used deliberately, you can mark it with the
+      =maybe_unused= attribute (instead of the idiomatic =(void) unused_var=).
+
+   5. A function not returning to the call location can be marked with the =noreturn=
+      attribute.
+
+
+** Old-school function parameter declaration style (K&R)
+
+   ‘K&R declaration’ (read “when types are specified after the brackets” or, “I don’t
+   understand old code in C”) is a form of function parameter declaration that was already
+   out-of-date way back in 1989. It is finally going to be [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2432.pdf][burnt with fire]]. In other
+   words, you won’t be allowed to do this anymore:
+
+   #+begin_src c
+   long maxl (a, b)
+   long a, b;
+   {
+       return a > b ? a: b;
+   }
+   #+end_src
+
+
+   Enlightenment has finally come to code in C! Function declarations will at last
+   actually do what people expect them to:
+
+   #+begin_src c
+   /* function declaration without arguments */
+   int no_args();
+
+   /* also function declaration without arguments */
+   int no_args(void);
+   #+end_src
+
+** Signed integer representation
+
+   What has felt like an endless saga is nearing completion, it would seem. The Committee
+   has [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2412.pdf][come to terms]] with the fact that there are no such things as unicorns or mythical
+   architectures, and programmers in C are dealing with [[https://en.wikipedia.org/wiki/Two's_complement][Two’s complement]] signed integer
+   representation.
+
+   In its present form this clarification simplifies the standard a little, but in future
+   it should make it possible to get rid of the language’s favourite undefined behaviour.
+
+* Proposals being worked on
+
+   While it can be said that the changes listed above already exist in our reality, the
+   following group of proposals is still being developed. Nevertheless, the Committee has
+   given them provisional approval and, assuming the authors show due diligence, they
+   should definitely be accepted.
+
+** Anonymous function parameters
+
+   I regularly write 1-2 trial programs in C a week. And, quite honestly, I have long
+   grown tired of having to specify the names of unused arguments.
+
+   Implementing [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2510.pdf][one]] of the proposals positively assessed by the Committee would mean that
+   we wouldn’t have to keep specifying the names of parameters in function definitions:
+
+   #+begin_src c
+   int main(int, char *[])
+   {
+       /* No hassle! */
+       return 0;
+   }
+   #+end_src
+
+   It’s a small thing – but welcome!
+
+** The old new keywords
+
+   After a very loooong transition period the Committee, finally, decided to accept, erm,
+   [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2458.pdf][‘new’]] [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2457.pdf][keywords]] into the language: =true=, =false=, =alignas=, =alignof=, =bool=,
+   =static_assert= and others. It will finally be possible to drop headers like
+   =<stdbool.h>=.
+
+** Including binary files in the source file
+
+   The [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2499.pdf][option]] of including binary data from files in the executable file is something all
+   game developers are going to find unbelievably useful:
+
+   #+begin_src c
+   const int music[] = {
+      #embed int "music.wav"
+   };
+   #+end_src
+
+   It’s my belief that the Committee has realises that the community knows where their
+   next meeting is being held, and that this preprocessor directive will be accepted
+   without questions.
+
+** Farewell, NULL – or nullptr ready on the starting blocks
+
+   It would seem that the problematic =NULL= macros are being [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2394.pdf][replaced]] with the keyword
+   =nullptr=, which will be equivalent to the expression =((void*)0)= and, in the case of
+   type conversion, will have to remain a pointer type. Any use of NULL should be
+   accompanied with a compiler warning:
+
+   #+begin_src c
+   /* I always forget why the cast is necessary. */
+   int execl(path, arg1, arg2, (char  *) NULL);
+
+   /* But happiness is just round the corner */
+   int execl(path, arg1, arg2, nullptr);
+   #+end_src
+
+   If this example make no sense to you, then take a look at the Linux documentation under
+   =man 3 exec= and you will find your enlightenment there.
+
+** Reform of error processing in the standard library
+
+   The processing of standard library function errors has been a longstanding problem in
+   C. The combination of unfortunate solutions in various versions of the standard, the
+   conservative stance of the Committee and reverse compatibility issues have all got in
+   the way of finding a solution that suits everyone.
+
+   And here, finally, is someone prepared to [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2429.pdf][propose]] a solution for compiler developers,
+   the super-conservative Committee and for us mere mortals:
+
+   #+begin_src c
+   [[ oob_return_errno ]] int myabs (int x) {
+     if(x == INT_MIN ) {
+             oob_return_errno ( ERANGE , INT_MIN ) ;
+     }
+     return (x < 0) ? -x : x;
+   }
+   #+end_src
+
+   Let me draw your attention to the =oob_return_errno= attribute. This means that the
+   following functions will be generated from this template function:
+
+   1. A function returning the structure with an error flag and the result of the work of
+      the (=struct {T return_value; int exception_code}=) function.
+
+   2. A function returning the result of the work of the function, and ignoring possible
+      errors in the arguments, leading to undefined behaviour.
+
+   3. A function terminating execution in the case of an error in the arguments.
+
+   4. A function replacing errno, that is, exhibiting ordinary behaviour.
+
+   The compiler is offered a choice between these options, depending on how the programmer uses a given function:
+
+   #+begin_src c
+   bool flag;
+   int result = oob_capture(&flag , myabs , input) ;
+   if (flag) {
+       abort ();
+   #+end_src
+
+   In this case, if the function has been carried out properly, this is shown with a flag,
+   while errno is not affected. Function calls saving the error code to the variable, for
+   example, look similar.
+
+   The actual syntax, it would seem, will yet change, but it is a good thing that the
+   Committee is at least /thinking/ in this direction.
+
+* Rumours
+
+  The author of “Effective C”, along with other Committee members, [[https://news.ycombinator.com/item?id=22865357][answered]] questions from
+  members of the Hacker News community. Lots of things overlap with what we have noted
+  above. But there are a couple of points which are important for programmers. These have
+  not been formulated as proposals, as such, however Committee members are hinting that
+  work might be underway in these areas.
+
+** typeof operator
+
+   The =typeof= keyword was [[https://gcc.gnu.org/onlinedocs/gcc/Typeof.html#Typeof][implemented]] a long time ago in compilers and makes it easier
+   to write correct macros. Here is a textbook example:
+
+   #+begin_src c
+   #define max(a,b)                                \
+       ({ typeof (a) _a = (a);                     \
+       typeof (b) _b = (b);                        \
+       _a > _b ? _a : _b; })
+   #+end_src
+
+   Martin Sebor, a developer from Red Hat and a Committee member, maintains that a
+   relevant proposal is already being worked on and will very likely be approved.
+
+   Keeping my fingers crossed!
+
+** defer operator
+
+   Some programming languages, including ones implemented by Clang and GCC, allow you to
+   bind freed-up resources to the lexical scoping of variables or, to put it more simply,
+   to call given code when the control flow goes outside the scope of the variable.
+
+   Pure C doesn’t have this option  nor ever has, but compilers have been implementing the =cleanup(<cleanup function>)= attribute for a long time:
+
+    #+begin_src c
+    int main(void)
+    {
+       __attribute__((cleanup(my_cleanup_function))) char *s = malloc(sizeof(*s));
+       return 0;
+    }
+    #+end_src
+
+    Robert Seacord author of “Effective C” and member of the Committee has [[https://news.ycombinator.com/item?id=22866311][admitted]] that
+    he is working on a proposal along the lines of the keyword =defer= from Go:
+
+    #+begin_src c
+    int do_something(void) {
+        FILE *file1, *file2;
+        object_t *obj;
+        file1 = fopen("a_file", "w");
+        if (file1 == NULL) {
+          return -1;
+        }
+        defer(fclose, file1);
+
+        file2 = fopen("another_file", "w");
+        if (file2 == NULL) {
+          return -1;
+        }
+        defer(fclose, file2);
+
+        /* ... */
+
+        return 0;
+    }
+    #+end_src
+
+   In this example, the =fclose= function will be called with the =file1= and =file2=
+   arguments, in any case where the program goes outside the body of the =do_something=
+   function.
+
+   Vive la révolution!
+
+* Conclusions
+
+   Changes to C are like genetic mutations: they don’t happen often, rarely are viable,
+   but, in the end, they push the evolution forward.
+
+   The most recent unfortunate changes to C occurred ten years ago. And the most recent
+   quality leap forward in terms of development of the language happened over 20 years
+   ago. And, by all accounts, the members of the Committee have now decided to consider
+   moving forwards in respect of the new iteration of the standard.
+
+   So, to conclude: use static analysers, run Valgrind as often as possible and try not to
+   write overly-big programs in C!
+
+   *PS* I think the “first truly interesting book” thing was an overstatement on my part.
+   Someone recommended a book entitled [[https://www.manning.com/books/modern-c][‘Modern C’]] written by a member of the committee,
+   and that would definitely be worth a read.
