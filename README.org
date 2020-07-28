@@ -1,1 +1,1 @@
-A post covering changes in the C2x standard ([[https://habr.com/ru/company/badoo/blog/503140/][in Russian]], in English).
+A post covering changes in the C2x standard ([[https://habr.com/ru/company/badoo/blog/503140/][Russian]], in [[https://habr.com/ru/company/badoo/blog/512802/][English]]).
